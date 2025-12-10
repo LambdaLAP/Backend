@@ -7,7 +7,36 @@ import { config } from '../config'
 import { AuthRequest } from '../middlewares/auth.middleware'
 
 /**
- * Register a new user
+ * Register a new user account
+ *
+ * Creates a new user with hashed password and returns a JWT token for authentication.
+ * The user is created with STUDENT role by default.
+ *
+ * @param req - Express request object containing email, password, and optional name in body
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 201 with token and user data on success, 400/409/500 on error
+ *
+ * @example
+ * // Request body
+ * {
+ *   "email": "user@example.com",
+ *   "password": "password123",
+ *   "name": "John Doe"
+ * }
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "token": "jwt_token_string",
+ *     "user": {
+ *       "id": "user_id",
+ *       "email": "user@example.com",
+ *       "role": "STUDENT"
+ *     }
+ *   }
+ * }
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -75,7 +104,35 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 }
 
 /**
- * Login user
+ * Authenticate user and generate JWT token
+ *
+ * Verifies user credentials and returns a JWT token for authentication.
+ * Email is case-insensitive.
+ *
+ * @param req - Express request object containing email and password in body
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with token and user data on success, 400/401/500 on error
+ *
+ * @example
+ * // Request body
+ * {
+ *   "email": "user@example.com",
+ *   "password": "password123"
+ * }
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "token": "jwt_token_string",
+ *     "user": {
+ *       "id": "user_id",
+ *       "email": "user@example.com",
+ *       "role": "STUDENT"
+ *     }
+ *   }
+ * }
  */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -129,7 +186,39 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 }
 
 /**
- * Get current user
+ * Get current authenticated user information
+ *
+ * Returns the profile data and statistics for the currently authenticated user.
+ * Requires valid JWT token in Authorization header.
+ *
+ * @param req - AuthRequest object with authenticated user info
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with user data on success, 401/404/500 on error
+ *
+ * @example
+ * // Request headers
+ * {
+ *   "Authorization": "Bearer jwt_token_string"
+ * }
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "user": {
+ *       "id": "user_id",
+ *       "email": "user@example.com",
+ *       "role": "STUDENT",
+ *       "profileData": { "name": "John Doe" },
+ *       "stats": {
+ *         "streakDays": 3,
+ *         "totalXp": 1250,
+ *         "lessonsCompleted": 12
+ *       }
+ *     }
+ *   }
+ * }
  */
 export const me = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

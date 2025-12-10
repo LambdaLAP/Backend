@@ -4,7 +4,37 @@ import { success, error } from '../utils/jsend'
 import { AuthRequest } from '../middlewares/auth.middleware'
 
 /**
- * Get all courses with optional filters
+ * Get list of published courses with optional filters
+ *
+ * Retrieves all published courses from the catalog. Supports filtering by
+ * difficulty level and topic tags. Calculates metadata including lesson count
+ * and estimated duration for each course.
+ *
+ * @param req - Express request with optional query params (difficulty, topic)
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with courses array on success, 500 on error
+ *
+ * @example
+ * // Request: GET /courses?difficulty=BEGINNER&topic=Python
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": [
+ *     {
+ *       "id": "course_id",
+ *       "title": "Python Fundamentals",
+ *       "description": "Master the basics...",
+ *       "difficulty": "BEGINNER",
+ *       "tags": ["Python", "Programming"],
+ *       "meta": {
+ *         "lessonCount": 12,
+ *         "durationHours": 6
+ *       }
+ *     }
+ *   ]
+ * }
  */
 export const getCourses = async (req: Request, res: Response): Promise<void> => {
   try {

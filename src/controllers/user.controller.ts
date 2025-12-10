@@ -4,7 +4,38 @@ import { success, error } from '../utils/jsend'
 import { AuthRequest } from '../middlewares/auth.middleware'
 
 /**
- * Get user dashboard data
+ * Get user dashboard data with stats and quick resume
+ *
+ * Retrieves the authenticated user's dashboard information including:
+ * - User profile (name, avatar)
+ * - Statistics (streak, XP, lessons completed)
+ * - Quick resume information (first incomplete lesson in most recent course)
+ *
+ * @param req - AuthRequest with authenticated user
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with dashboard data on success, 401/404/500 on error
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "user": {
+ *       "name": "John Doe",
+ *       "avatar": null
+ *     },
+ *     "stats": {
+ *       "streakDays": 3,
+ *       "totalXp": 1250,
+ *       "lessonsCompleted": 12
+ *     },
+ *     "quickResume": {
+ *       "courseTitle": "Python 101",
+ *       "lessonId": "lesson_id",
+ *       "lessonTitle": "Loops and Logic"
+ *     }
+ *   }
+ * }
  */
 export const getDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -72,7 +103,31 @@ export const getDashboard = async (req: AuthRequest, res: Response): Promise<voi
 }
 
 /**
- * Get user enrollments
+ * Get list of user's course enrollments with progress
+ *
+ * Retrieves all courses the authenticated user is enrolled in, including:
+ * - Course basic information (id, title)
+ * - Progress metrics (total lessons, completed lessons)
+ * - Last access timestamp
+ *
+ * @param req - AuthRequest with authenticated user
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with enrollments array on success, 401/500 on error
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": [
+ *     {
+ *       "courseId": "course_id",
+ *       "title": "Python 101",
+ *       "totalLessons": 20,
+ *       "completedLessons": 5,
+ *       "lastAccessedAt": "2025-12-10T..."
+ *     }
+ *   ]
+ * }
  */
 export const getEnrollments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -119,7 +174,29 @@ export const getEnrollments = async (req: AuthRequest, res: Response): Promise<v
 }
 
 /**
- * Enroll in a course
+ * Enroll authenticated user in a course
+ *
+ * Creates a new enrollment record for the user in the specified course.
+ * Prevents duplicate enrollments.
+ *
+ * @param req - AuthRequest with authenticated user and courseId in body
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 201 with enrollment ID on success, 400/401/409/500 on error
+ *
+ * @example
+ * // Request body
+ * {
+ *   "courseId": "course_id_here"
+ * }
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "enrollmentId": "enrollment_id"
+ *   }
+ * }
  */
 export const enrollInCourse = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -160,7 +237,31 @@ export const enrollInCourse = async (req: AuthRequest, res: Response): Promise<v
 }
 
 /**
- * Update lesson progress
+ * Update lesson progress for authenticated user
+ *
+ * Marks a lesson as completed or in-progress. Automatically awards XP
+ * and increments lesson completion count when a lesson is first completed.
+ * Prevents duplicate XP awards for the same lesson.
+ *
+ * @param req - AuthRequest with authenticated user, lessonId in params, and isCompleted in body
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with progress ID on success, 401/500 on error
+ *
+ * @example
+ * // Request: PUT /users/progress/:lessonId
+ * // Body
+ * {
+ *   "isCompleted": true
+ * }
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "progress": "progress_id"
+ *   }
+ * }
  */
 export const updateLessonProgress = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

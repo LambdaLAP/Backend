@@ -7,7 +7,43 @@ import { AuthRequest } from '../middlewares/auth.middleware'
 const DUMMY_TEST_PASS_RATE = 0.7 // 70% pass rate for demo purposes
 
 /**
- * Execute code (dummy implementation for now)
+ * Execute code and return results (dummy implementation)
+ *
+ * Simulates code execution for challenges. This is a placeholder implementation
+ * that returns mock results. In production, this should integrate with a
+ * sandboxed code execution service.
+ *
+ * If authenticated and a challengeId is provided, saves the submission to database.
+ *
+ * @param req - AuthRequest with optional user and code/challengeId in body
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with execution results on success, 400/500 on error
+ *
+ * @example
+ * // Request body
+ * {
+ *   "challengeId": "challenge_id",
+ *   "code": "print('Hello World')",
+ *   "language": "python"
+ * }
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "status": "PASS",
+ *     "stdout": "Code executed successfully\nAll test cases passed!\n",
+ *     "stderr": null,
+ *     "metrics": {
+ *       "runtime": "0.05s"
+ *     }
+ *   }
+ * }
+ *
+ * @remarks
+ * This is a dummy implementation. Replace with actual code execution service
+ * integration for production use.
  */
 export const runCode = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -83,7 +119,35 @@ export const runCode = async (req: AuthRequest, res: Response): Promise<void> =>
 }
 
 /**
- * Get submission history for a user
+ * Get submission history for authenticated user
+ *
+ * Retrieves the most recent 50 code submissions for the authenticated user.
+ * Can be filtered by challengeId to get submissions for a specific challenge.
+ *
+ * @param req - AuthRequest with authenticated user and optional challengeId query param
+ * @param res - Express response object
+ * @returns Promise<void> - Sends 200 with submissions array on success, 401/500 on error
+ *
+ * @example
+ * // Request: GET /execution/submissions?challengeId=challenge_id
+ *
+ * @example
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": [
+ *     {
+ *       "id": "submission_id",
+ *       "challengeId": "challenge_id",
+ *       "status": "PASSED",
+ *       "createdAt": "2025-12-10T...",
+ *       "metrics": {
+ *         "runtime": "0.05s",
+ *         "memoryUsed": "512KB"
+ *       }
+ *     }
+ *   ]
+ * }
  */
 export const getSubmissions = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
