@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { Lesson, Challenge, LessonProgress } from '../models'
+import { Lesson, Challenge, LessonProgress, Enrollment } from '../models'
 import { success, error } from '../utils/jsend'
 import { AuthRequest } from '../middlewares/auth.middleware'
 
@@ -33,7 +33,6 @@ export const getLessonById = async (req: AuthRequest, res: Response): Promise<vo
     // Update last accessed if user is authenticated
     if (req.user) {
       // Update enrollment last accessed
-      const { Enrollment } = await import('../models')
       await Enrollment.findOneAndUpdate(
         {
           userId: req.user.id,

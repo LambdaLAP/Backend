@@ -51,10 +51,12 @@ export const authenticate = async (
       }
 
       next()
-    } catch {
+    } catch (jwtError) {
+      console.error('JWT verification failed:', jwtError)
       res.status(401).json(error('Invalid token', 'UNAUTHORIZED'))
     }
-  } catch {
+  } catch (authError) {
+    console.error('Authentication error:', authError)
     res.status(500).json(error('Authentication error', 'INTERNAL_ERROR'))
   }
 }

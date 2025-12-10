@@ -3,6 +3,9 @@ import { Challenge, Submission } from '../models'
 import { success, error } from '../utils/jsend'
 import { AuthRequest } from '../middlewares/auth.middleware'
 
+// Dummy execution configuration
+const DUMMY_TEST_PASS_RATE = 0.7 // 70% pass rate for demo purposes
+
 /**
  * Execute code (dummy implementation for now)
  */
@@ -35,7 +38,7 @@ export const runCode = async (req: AuthRequest, res: Response): Promise<void> =>
         if (challenge) {
           // Dummy test case validation
           // In production, this would run actual tests
-          const testsPassed = Math.random() > 0.3 // 70% pass rate for demo
+          const testsPassed = Math.random() < DUMMY_TEST_PASS_RATE
 
           if (testsPassed) {
             status = 'PASS'

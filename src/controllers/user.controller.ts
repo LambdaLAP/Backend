@@ -172,6 +172,14 @@ export const updateLessonProgress = async (req: AuthRequest, res: Response): Pro
     const { lessonId } = req.params
     const { isCompleted } = req.body
 
+    // Check if lesson was already completed
+    const existingProgress = await LessonProgress.findOne({
+      userId: req.user.id,
+      lessonId
+    })
+
+    const wasAlreadyCompleted = existingProgress?.isCompleted || false
+
     const progress = await LessonProgress.findOneAndUpdate(
       {
         userId: req.user.id,
@@ -184,8 +192,8 @@ export const updateLessonProgress = async (req: AuthRequest, res: Response): Pro
       { upsert: true, new: true }
     )
 
-    // Update user stats if lesson is newly completed
-    if (isCompleted) {
+    // Update user stats only if lesson is newly completed (not already completed)
+    if (isCompleted && !wasAlreadyCompleted) {
       await User.findByIdAndUpdate(req.user.id, {
         $inc: { 'stats.lessonsCompleted': 1, 'stats.totalXp': 50 }
       })
