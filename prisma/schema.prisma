@@ -42,10 +42,10 @@ model User {
   profileData  Json?
   createdAt    DateTime @default(now())
 
-  enrollments     Enrollment[]
-  lessonProgress  LessonProgress[]
-  submissions     Submission[]
-  chatThreads     ChatThread[]
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  submissions    Submission[]
+  chatThreads    ChatThread[]
 
   @@map("users")
 }
@@ -70,9 +70,9 @@ model Lesson {
   orderIndex      Int
   contentMarkdown String
 
-  course          Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  challenges      Challenge[]
-  lessonProgress  LessonProgress[]
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  challenges     Challenge[]
+  lessonProgress LessonProgress[]
 
   @@map("lessons")
 }
@@ -85,8 +85,8 @@ model Challenge {
   solutionCode String
   testCases    Json
 
-  lesson       Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  submissions  Submission[]
+  lesson      Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  submissions Submission[]
 
   @@map("challenges")
 }
