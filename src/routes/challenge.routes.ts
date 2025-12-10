@@ -7,16 +7,29 @@ import {
   getChallengesByLesson
 } from '../controllers/challenge.controller'
 import { authenticate, authorize } from '../middlewares/auth.middleware'
+import { apiLimiter } from '../middlewares/rateLimit.middleware'
 
 const router = Router()
 
 // Public routes
-router.get('/:challengeId', getChallengeById)
-router.get('/lesson/:lessonId', getChallengesByLesson)
+router.get('/:challengeId', apiLimiter, getChallengeById)
+router.get('/lesson/:lessonId', apiLimiter, getChallengesByLesson)
 
 // Protected routes (admin/instructor only)
-router.post('/', authenticate, authorize('ADMIN', 'INSTRUCTOR'), createChallenge)
-router.put('/:challengeId', authenticate, authorize('ADMIN', 'INSTRUCTOR'), updateChallenge)
-router.delete('/:challengeId', authenticate, authorize('ADMIN', 'INSTRUCTOR'), deleteChallenge)
+router.post('/', apiLimiter, authenticate, authorize('ADMIN', 'INSTRUCTOR'), createChallenge)
+router.put(
+  '/:challengeId',
+  apiLimiter,
+  authenticate,
+  authorize('ADMIN', 'INSTRUCTOR'),
+  updateChallenge
+)
+router.delete(
+  '/:challengeId',
+  apiLimiter,
+  authenticate,
+  authorize('ADMIN', 'INSTRUCTOR'),
+  deleteChallenge
+)
 
 export default router
