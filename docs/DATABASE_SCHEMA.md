@@ -1,6 +1,6 @@
 # Database Schema Documentation
 
-This document describes the MongoDB database schema for the Lambda LAP project using Prisma ORM.
+This document describes the MongoDB database schema for the Lambda LAP project using Mongoose ODM.
 
 ## Overview
 
@@ -23,15 +23,12 @@ The database schema consists of 9 main models representing the core entities of 
 Stores user account information and authentication data.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
+- `_id` (ObjectId, Auto-generated) - Unique identifier
 - `email` (String, Unique, Required) - User's email address
 - `passwordHash` (String, Required) - Hashed password
 - `role` (Role Enum, Default: STUDENT) - User role
-- `profileData` (JSON, Optional) - Additional profile information
-- `createdAt` (DateTime, Auto) - Account creation timestamp
-
-**Relationships:**
-- Has many: Enrollments, LessonProgress, Submissions, ChatThreads
+- `profileData` (Mixed, Optional) - Additional profile information
+- `createdAt` (Date, Auto) - Account creation timestamp
 
 **Role Enum Values:**
 - `STUDENT` - Regular learner
@@ -43,95 +40,75 @@ Stores user account information and authentication data.
 Represents educational courses available on the platform.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
+- `_id` (ObjectId, Auto-generated) - Unique identifier
 - `title` (String, Required) - Course title
 - `description` (String, Required) - Course description
 - `isPublished` (Boolean, Default: false) - Publication status
-- `createdAt` (DateTime, Auto) - Course creation timestamp
-
-**Relationships:**
-- Has many: Lessons, Enrollments
+- `createdAt` (Date, Auto) - Course creation timestamp
 
 ### Lesson
 
 Individual lessons that make up a course.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
-- `courseId` (ObjectId, Required, Foreign Key) - Reference to parent course
+- `_id` (ObjectId, Auto-generated) - Unique identifier
+- `courseId` (ObjectId, Required, Ref: Course) - Reference to parent course
 - `title` (String, Required) - Lesson title
-- `orderIndex` (Int, Required) - Order within the course
+- `orderIndex` (Number, Required) - Order within the course
 - `contentMarkdown` (String, Required) - Lesson content in Markdown format
-
-**Relationships:**
-- Belongs to: Course (Cascade delete)
-- Has many: Challenges, LessonProgress
 
 ### Challenge
 
 Coding challenges within lessons.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
-- `lessonId` (ObjectId, Required, Foreign Key) - Reference to parent lesson
+- `_id` (ObjectId, Auto-generated) - Unique identifier
+- `lessonId` (ObjectId, Required, Ref: Lesson) - Reference to parent lesson
 - `title` (String, Required) - Challenge title
 - `starterCode` (String, Required) - Initial code template
 - `solutionCode` (String, Required) - Reference solution
-- `testCases` (JSON, Required) - Test cases for validation
-
-**Relationships:**
-- Belongs to: Lesson (Cascade delete)
-- Has many: Submissions
+- `testCases` (Array/Mixed, Required) - Test cases for validation
 
 ### Enrollment
 
 Links users to courses they're enrolled in.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
-- `userId` (ObjectId, Required, Foreign Key) - Reference to user
-- `courseId` (ObjectId, Required, Foreign Key) - Reference to course
-- `enrolledAt` (DateTime, Auto) - Enrollment timestamp
+- `_id` (ObjectId, Auto-generated) - Unique identifier
+- `userId` (ObjectId, Required, Ref: User) - Reference to user
+- `courseId` (ObjectId, Required, Ref: Course) - Reference to course
+- `enrolledAt` (Date, Auto) - Enrollment timestamp
 
-**Relationships:**
-- Belongs to: User (Cascade delete), Course (Cascade delete)
-
-**Constraints:**
-- Unique index on (userId, courseId) - Prevents duplicate enrollments
+**Indexes:**
+- Unique compound index on (userId, courseId) - Prevents duplicate enrollments
 
 ### LessonProgress
 
 Tracks user progress through lessons.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
-- `userId` (ObjectId, Required, Foreign Key) - Reference to user
-- `lessonId` (ObjectId, Required, Foreign Key) - Reference to lesson
+- `_id` (ObjectId, Auto-generated) - Unique identifier
+- `userId` (ObjectId, Required, Ref: User) - Reference to user
+- `lessonId` (ObjectId, Required, Ref: Lesson) - Reference to lesson
 - `isCompleted` (Boolean, Default: false) - Completion status
-- `completedAt` (DateTime, Optional) - Completion timestamp
+- `completedAt` (Date, Optional) - Completion timestamp
 
-**Relationships:**
-- Belongs to: User (Cascade delete), Lesson (Cascade delete)
-
-**Constraints:**
-- Unique index on (userId, lessonId) - One progress record per user per lesson
+**Indexes:**
+- Unique compound index on (userId, lessonId) - One progress record per user per lesson
 
 ### Submission
 
 User code submissions for challenges.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
-- `userId` (ObjectId, Required, Foreign Key) - Reference to user
-- `challengeId` (ObjectId, Required, Foreign Key) - Reference to challenge
+- `_id` (ObjectId, Auto-generated) - Unique identifier
+- `userId` (ObjectId, Required, Ref: User) - Reference to user
+- `challengeId` (ObjectId, Required, Ref: Challenge) - Reference to challenge
 - `userCode` (String, Required) - User's submitted code
 - `outputLog` (String, Required) - Execution output/logs
 - `status` (Status Enum, Required) - Submission status
-- `metrics` (JSON, Required) - Execution metrics (time, memory, etc.)
-- `createdAt` (DateTime, Auto) - Submission timestamp
-
-**Relationships:**
-- Belongs to: User (Cascade delete), Challenge (Cascade delete)
+- `metrics` (Mixed, Required) - Execution metrics (time, memory, etc.)
+- `createdAt` (Date, Auto) - Submission timestamp
 
 **Status Enum Values:**
 - `PENDING` - Awaiting execution
@@ -144,115 +121,102 @@ User code submissions for challenges.
 Conversation threads for user support and help.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
-- `userId` (ObjectId, Required, Foreign Key) - Reference to user who created the thread
+- `_id` (ObjectId, Auto-generated) - Unique identifier
+- `userId` (ObjectId, Required, Ref: User) - Reference to user who created the thread
 - `title` (String, Required) - Thread title/subject
-- `createdAt` (DateTime, Auto) - Thread creation timestamp
-- `updatedAt` (DateTime, Auto-update) - Last update timestamp
-
-**Relationships:**
-- Belongs to: User (Cascade delete)
-- Has many: ChatMessages
+- `createdAt` (Date, Auto) - Thread creation timestamp
+- `updatedAt` (Date, Auto-update) - Last update timestamp
 
 ### ChatMessage
 
 Individual messages within chat threads.
 
 **Fields:**
-- `id` (ObjectId, Primary Key) - Unique identifier
-- `threadId` (ObjectId, Required, Foreign Key) - Reference to parent thread
+- `_id` (ObjectId, Auto-generated) - Unique identifier
+- `threadId` (ObjectId, Required, Ref: ChatThread) - Reference to parent thread
 - `role` (SenderRole Enum, Required) - Message sender role
 - `content` (String, Required) - Message content
-- `createdAt` (DateTime, Auto) - Message timestamp
-
-**Relationships:**
-- Belongs to: ChatThread (Cascade delete)
+- `createdAt` (Date, Auto) - Message timestamp
 
 **SenderRole Enum Values:**
 - `USER` - Message from user
 - `ASSISTANT` - Message from AI assistant
 - `SYSTEM` - System-generated message
 
-## Cascade Deletion
-
-The following cascade deletion rules are implemented:
-
-- Deleting a **Course** deletes all related **Lessons** and **Enrollments**
-- Deleting a **Lesson** deletes all related **Challenges** and **LessonProgress**
-- Deleting a **Challenge** deletes all related **Submissions**
-- Deleting a **User** deletes all related **Enrollments**, **LessonProgress**, **Submissions**, **ChatThreads**
-- Deleting a **ChatThread** deletes all related **ChatMessages**
-
 ## Usage
 
 ### Connecting to the Database
 
 ```typescript
-import { prisma } from './utils/db'
+import { connect } from './utils/db'
+import { User } from './models'
 
-// The connection is automatically managed
-// Just use the prisma client
-const users = await prisma.user.findMany()
+// Connect to MongoDB
+await connect()
+
+// Use models
+const users = await User.find()
 ```
 
 ### Example Queries
 
 **Create a new user:**
 ```typescript
-const user = await prisma.user.create({
-  data: {
-    email: 'student@example.com',
-    passwordHash: 'hashed_password',
-    role: 'STUDENT',
-    profileData: { firstName: 'John', lastName: 'Doe' }
-  }
+import { User, Role } from './models'
+
+const user = await User.create({
+  email: 'student@example.com',
+  passwordHash: 'hashed_password',
+  role: Role.STUDENT,
+  profileData: { firstName: 'John', lastName: 'Doe' }
 })
 ```
 
 **Enroll a user in a course:**
 ```typescript
-const enrollment = await prisma.enrollment.create({
-  data: {
-    userId: user.id,
-    courseId: course.id
-  }
+import { Enrollment } from './models'
+
+const enrollment = await Enrollment.create({
+  userId: user._id,
+  courseId: course._id
 })
 ```
 
 **Track lesson completion:**
 ```typescript
-const progress = await prisma.lessonProgress.upsert({
-  where: {
-    userId_lessonId: {
-      userId: user.id,
-      lessonId: lesson.id
-    }
-  },
-  update: {
+import { LessonProgress } from './models'
+
+const progress = await LessonProgress.findOneAndUpdate(
+  { userId: user._id, lessonId: lesson._id },
+  {
     isCompleted: true,
     completedAt: new Date()
   },
-  create: {
-    userId: user.id,
-    lessonId: lesson.id,
-    isCompleted: true,
-    completedAt: new Date()
-  }
-})
+  { upsert: true, new: true }
+)
 ```
 
 **Submit a challenge solution:**
 ```typescript
-const submission = await prisma.submission.create({
-  data: {
-    userId: user.id,
-    challengeId: challenge.id,
-    userCode: 'function solution() { ... }',
-    outputLog: 'All tests passed',
-    status: 'PASSED',
-    metrics: { executionTime: 100, memoryUsed: 1024 }
-  }
+import { Submission, Status } from './models'
+
+const submission = await Submission.create({
+  userId: user._id,
+  challengeId: challenge._id,
+  userCode: 'function solution() { ... }',
+  outputLog: 'All tests passed',
+  status: Status.PASSED,
+  metrics: { executionTime: 100, memoryUsed: 1024 }
 })
+```
+
+**Query with population:**
+```typescript
+import { Enrollment } from './models'
+
+const enrollments = await Enrollment.find({ userId: user._id })
+  .populate('courseId')
+  .populate('userId')
 ```
 
 ## Configuration
@@ -263,24 +227,23 @@ The database connection is configured through environment variables in the `.env
 DATABASE_URL="mongodb://localhost:27017/lambda_lap"
 ```
 
-For Prisma 7, the configuration is also specified in `prisma/prisma.config.ts`.
+## Cascade Deletion
 
-## Generating the Prisma Client
+Mongoose does not have built-in cascade delete like Prisma. To implement cascade deletion, you can:
 
-After making changes to the schema, regenerate the Prisma client:
+1. Use middleware hooks (pre/post hooks)
+2. Manually delete related documents
+3. Use MongoDB's referential actions
 
-```bash
-npx prisma generate
-```
-
-## Migrations
-
-Since this project uses MongoDB, traditional migrations are not applicable. The schema is enforced at the application level through Prisma.
-
-To push schema changes to the database:
-
-```bash
-npx prisma db push
+Example:
+```typescript
+// In Course model
+CourseSchema.pre('deleteOne', async function(next) {
+  const courseId = this.getQuery()._id
+  await Lesson.deleteMany({ courseId })
+  await Enrollment.deleteMany({ courseId })
+  next()
+})
 ```
 
 ## Testing
@@ -289,4 +252,14 @@ Database schema tests are located in `src/__tests__/database.test.ts`. Run tests
 
 ```bash
 npm test
+```
+
+## Model Types
+
+All models export TypeScript interfaces for type safety:
+
+```typescript
+import { IUser, ICourse, ILesson } from './models'
+
+const user: IUser = await User.findById(userId)
 ```

@@ -1,4 +1,4 @@
-import { Role, Status, SenderRole } from '../generated/prisma'
+import { Role, Status, SenderRole } from '../models'
 
 describe('Database Schema Validation', () => {
   describe('Enums', () => {
@@ -23,8 +23,8 @@ describe('Database Schema Validation', () => {
   })
 
   describe('Type Exports', () => {
-    it('should export Prisma Client types', () => {
-      // This test ensures the generated types are available
+    it('should export model enums', () => {
+      // This test ensures the model types are available
       const roleTypes: Role[] = [Role.STUDENT, Role.INSTRUCTOR, Role.ADMIN]
       expect(roleTypes).toHaveLength(3)
 

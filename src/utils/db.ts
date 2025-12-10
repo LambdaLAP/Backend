@@ -1,36 +1,58 @@
 /**
- * Database connection utility using Prisma Client
+ * Database connection utility using Mongoose
  */
 
-import { PrismaClient } from '../generated/prisma'
+import mongoose from 'mongoose'
+import config from '../config'
 
-// Prevent multiple instances of Prisma Client in development
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+// Connection state
+let isConnected = false
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
-  })
+/**
+ * Connect to MongoDB database
+ */
+export const connect = async (): Promise<void> => {
+  if (isConnected) {
+    return
+  }
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
+  try {
+    const connection = await mongoose.connect(config.database.url)
+    isConnected = connection.connections[0].readyState === 1
+    console.log('MongoDB connected successfully')
+  } catch (error) {
+    console.error('MongoDB connection error:', error)
+    throw error
+  }
 }
 
 /**
  * Disconnect from database
  */
 export const disconnect = async (): Promise<void> => {
-  await prisma.$disconnect()
+  if (!isConnected) {
+    return
+  }
+
+  try {
+    await mongoose.disconnect()
+    isConnected = false
+    console.log('MongoDB disconnected successfully')
+  } catch (error) {
+    console.error('MongoDB disconnection error:', error)
+    throw error
+  }
 }
 
 /**
- * Connect to database
+ * Get connection status
  */
-export const connect = async (): Promise<void> => {
-  await prisma.$connect()
+export const getConnectionStatus = (): boolean => {
+  return isConnected
 }
 
-export default prisma
+export default {
+  connect,
+  disconnect,
+  getConnectionStatus
+}
