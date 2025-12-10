@@ -4,7 +4,7 @@ The Backend of Lambda L.A.P Project
 ## Stack
 - **Node.js** with **TypeScript** (Strict mode, ES2020+)
 - **Express** - Web framework
-- **Prisma** - Database ORM with MongoDB
+- **Mongoose** - MongoDB ODM
 - **Jest** & **Supertest** - Testing framework
 - **ESLint** (Standard) & **Prettier** - Code quality
 - **Husky** - Git hooks for pre-commit linting
