@@ -1,6 +1,6 @@
 export { User, IUser, Role } from './User'
-export { Course, ICourse } from './Course'
-export { Lesson, ILesson } from './Lesson'
+export { Course, ICourse, Difficulty } from './Course'
+export { Lesson, ILesson, LessonType } from './Lesson'
 export { Challenge, IChallenge } from './Challenge'
 export { Enrollment, IEnrollment } from './Enrollment'
 export { LessonProgress, ILessonProgress } from './LessonProgress'

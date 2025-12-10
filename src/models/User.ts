@@ -11,6 +11,11 @@ export interface IUser extends Document {
   passwordHash: string
   role: Role
   profileData?: Record<string, any>
+  stats?: {
+    streakDays: number
+    totalXp: number
+    lessonsCompleted: number
+  }
   createdAt: Date
 }
 
@@ -35,6 +40,18 @@ const UserSchema = new Schema<IUser>(
     profileData: {
       type: Schema.Types.Mixed,
       default: null
+    },
+    stats: {
+      type: {
+        streakDays: { type: Number, default: 0 },
+        totalXp: { type: Number, default: 0 },
+        lessonsCompleted: { type: Number, default: 0 }
+      },
+      default: {
+        streakDays: 0,
+        totalXp: 0,
+        lessonsCompleted: 0
+      }
     }
   },
   {
