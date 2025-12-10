@@ -1,10 +1,16 @@
 import mongoose, { Document, Schema } from 'mongoose'
 
+export enum LessonType {
+  LESSON = 'LESSON',
+  CHALLENGE = 'CHALLENGE'
+}
+
 export interface ILesson extends Document {
   courseId: mongoose.Types.ObjectId
   title: string
   orderIndex: number
   contentMarkdown: string
+  type: LessonType
 }
 
 const LessonSchema = new Schema<ILesson>({
@@ -25,6 +31,11 @@ const LessonSchema = new Schema<ILesson>({
   contentMarkdown: {
     type: String,
     required: true
+  },
+  type: {
+    type: String,
+    enum: Object.values(LessonType),
+    default: LessonType.LESSON
   }
 })
 

@@ -6,6 +6,7 @@ export interface IChallenge extends Document {
   starterCode: string
   solutionCode: string
   testCases: any[]
+  language: string
 }
 
 const ChallengeSchema = new Schema<IChallenge>({
@@ -31,6 +32,10 @@ const ChallengeSchema = new Schema<IChallenge>({
     type: Schema.Types.Mixed,
     required: true,
     default: []
+  },
+  language: {
+    type: String,
+    default: 'python'
   }
 })
 

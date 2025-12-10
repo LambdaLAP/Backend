@@ -4,6 +4,7 @@ export interface IEnrollment extends Document {
   userId: mongoose.Types.ObjectId
   courseId: mongoose.Types.ObjectId
   enrolledAt: Date
+  lastAccessedAt?: Date
 }
 
 const EnrollmentSchema = new Schema<IEnrollment>(
@@ -17,6 +18,10 @@ const EnrollmentSchema = new Schema<IEnrollment>(
       type: Schema.Types.ObjectId,
       ref: 'Course',
       required: true
+    },
+    lastAccessedAt: {
+      type: Date,
+      default: null
     }
   },
   {

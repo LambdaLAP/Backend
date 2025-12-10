@@ -1,4 +1,4 @@
-import { Role, Status, SenderRole } from '../models'
+import { Role, Status, SenderRole, Difficulty, LessonType } from '../models'
 
 describe('Database Schema Validation', () => {
   describe('Enums', () => {
@@ -20,6 +20,17 @@ describe('Database Schema Validation', () => {
       expect(SenderRole.ASSISTANT).toBe('ASSISTANT')
       expect(SenderRole.SYSTEM).toBe('SYSTEM')
     })
+
+    it('should have Difficulty enum with correct values', () => {
+      expect(Difficulty.BEGINNER).toBe('BEGINNER')
+      expect(Difficulty.INTERMEDIATE).toBe('INTERMEDIATE')
+      expect(Difficulty.ADVANCED).toBe('ADVANCED')
+    })
+
+    it('should have LessonType enum with correct values', () => {
+      expect(LessonType.LESSON).toBe('LESSON')
+      expect(LessonType.CHALLENGE).toBe('CHALLENGE')
+    })
   })
 
   describe('Type Exports', () => {
@@ -37,6 +48,16 @@ describe('Database Schema Validation', () => {
         SenderRole.SYSTEM
       ]
       expect(senderRoleTypes).toHaveLength(3)
+
+      const difficultyTypes: Difficulty[] = [
+        Difficulty.BEGINNER,
+        Difficulty.INTERMEDIATE,
+        Difficulty.ADVANCED
+      ]
+      expect(difficultyTypes).toHaveLength(3)
+
+      const lessonTypes: LessonType[] = [LessonType.LESSON, LessonType.CHALLENGE]
+      expect(lessonTypes).toHaveLength(2)
     })
   })
 })
