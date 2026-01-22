@@ -10,14 +10,11 @@ export const getLessonById = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const { lessonId } = req.params
 
-    const lesson = await Lesson.findById(lessonId)
+    const lesson = await Lesson.findById(lessonId).populate('challengeIds')
     if (!lesson) {
       res.status(404).json(error('Lesson not found', 'NOT_FOUND'))
       return
     }
-
-    // Get challenge if exists
-    const challenge = await Challenge.findOne({ lessonId: lesson._id })
 
     // Find next and previous lessons
     const nextLesson = await Lesson.findOne({
@@ -44,18 +41,21 @@ export const getLessonById = async (req: AuthRequest, res: Response): Promise<vo
       )
     }
 
+    // Format challenges
+    const challenges =
+      (lesson.challengeIds as any[])?.map((challenge: any) => ({
+        id: challenge._id.toString(),
+        title: challenge.title,
+        starterCodes: challenge.starterCodes,
+        testCases: challenge.testCases.filter((tc: any) => !tc.isHidden)
+      })) || []
+
     res.status(200).json(
       success({
         id: lesson._id.toString(),
         title: lesson.title,
         contentMarkdown: lesson.contentMarkdown,
-        challenge: challenge
-          ? {
-              id: challenge._id.toString(),
-              starterCode: challenge.starterCode,
-              language: challenge.language
-            }
-          : null,
+        challenges,
         nextLessonId: nextLesson ? nextLesson._id.toString() : null,
         prevLessonId: prevLesson ? prevLesson._id.toString() : null
       })
@@ -71,7 +71,7 @@ export const getLessonById = async (req: AuthRequest, res: Response): Promise<vo
  */
 export const createLesson = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { courseId, title, orderIndex, contentMarkdown, type } = req.body
+    const { courseId, title, orderIndex, contentMarkdown, type, challengeIds } = req.body
 
     if (!courseId || !title || orderIndex === undefined || !contentMarkdown) {
       res
@@ -85,7 +85,8 @@ export const createLesson = async (req: AuthRequest, res: Response): Promise<voi
       title,
       orderIndex,
       contentMarkdown,
-      type: type || 'LESSON'
+      type: type || 'LESSON',
+      challengeIds: challengeIds || []
     })
 
     res.status(201).json(success({ lessonId: lesson._id.toString() }))
@@ -101,7 +102,7 @@ export const createLesson = async (req: AuthRequest, res: Response): Promise<voi
 export const updateLesson = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { lessonId } = req.params
-    const { title, orderIndex, contentMarkdown, type } = req.body
+    const { title, orderIndex, contentMarkdown, type, challengeIds } = req.body
 
     const lesson = await Lesson.findByIdAndUpdate(
       lessonId,
@@ -109,7 +110,8 @@ export const updateLesson = async (req: AuthRequest, res: Response): Promise<voi
         ...(title && { title }),
         ...(orderIndex !== undefined && { orderIndex }),
         ...(contentMarkdown && { contentMarkdown }),
-        ...(type && { type })
+        ...(type && { type }),
+        ...(challengeIds && { challengeIds })
       },
       { new: true }
     )

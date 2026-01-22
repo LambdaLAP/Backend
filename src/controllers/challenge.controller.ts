@@ -6,7 +6,7 @@ import { AuthRequest } from '../middlewares/auth.middleware'
 /**
  * Get challenge by ID
  */
-export const getChallengeById = async (req: Request, res: Response): Promise<void> => {
+export const getChallengeById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { challengeId } = req.params
 
@@ -17,14 +17,21 @@ export const getChallengeById = async (req: Request, res: Response): Promise<voi
       return
     }
 
+    // Filter test cases based on user role
+    const user = req.user
+    const isAdminOrInstructor = user && (user.role === 'ADMIN' || user.role === 'INSTRUCTOR')
+
+    const filteredTestCases = isAdminOrInstructor
+      ? challenge.testCases
+      : challenge.testCases.filter(tc => !tc.isHidden)
+
     res.status(200).json(
       success({
         id: challenge._id.toString(),
         lessonId: challenge.lessonId.toString(),
         title: challenge.title,
-        starterCode: challenge.starterCode,
-        language: challenge.language,
-        testCases: challenge.testCases
+        starterCodes: challenge.starterCodes,
+        testCases: filteredTestCases
       })
     )
   } catch (err) {
@@ -38,14 +45,14 @@ export const getChallengeById = async (req: Request, res: Response): Promise<voi
  */
 export const createChallenge = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { lessonId, title, starterCode, solutionCode, testCases, language } = req.body
+    const { lessonId, title, starterCodes, solutionCodes, testCases } = req.body
 
-    if (!lessonId || !title || !starterCode || !solutionCode) {
+    if (!lessonId || !title || !starterCodes || !solutionCodes) {
       res
         .status(400)
         .json(
           error(
-            'Lesson ID, title, starter code, and solution code are required',
+            'Lesson ID, title, starter codes, and solution codes are required',
             'VALIDATION_ERROR'
           )
         )
@@ -62,10 +69,9 @@ export const createChallenge = async (req: AuthRequest, res: Response): Promise<
     const challenge = await Challenge.create({
       lessonId,
       title,
-      starterCode,
-      solutionCode,
-      testCases: testCases || [],
-      language: language || 'python'
+      starterCodes,
+      solutionCodes,
+      testCases: testCases || []
     })
 
     res.status(201).json(success({ challengeId: challenge._id.toString() }))
@@ -81,16 +87,15 @@ export const createChallenge = async (req: AuthRequest, res: Response): Promise<
 export const updateChallenge = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { challengeId } = req.params
-    const { title, starterCode, solutionCode, testCases, language } = req.body
+    const { title, starterCodes, solutionCodes, testCases } = req.body
 
     const challenge = await Challenge.findByIdAndUpdate(
       challengeId,
       {
         ...(title && { title }),
-        ...(starterCode && { starterCode }),
-        ...(solutionCode && { solutionCode }),
-        ...(testCases && { testCases }),
-        ...(language && { language })
+        ...(starterCodes && { starterCodes }),
+        ...(solutionCodes && { solutionCodes }),
+        ...(testCases && { testCases })
       },
       { new: true }
     )
@@ -137,11 +142,18 @@ export const getChallengesByLesson = async (req: Request, res: Response): Promis
 
     const challenges = await Challenge.find({ lessonId })
 
-    const challengesData = challenges.map(challenge => ({
-      id: challenge._id.toString(),
-      title: challenge.title,
-      language: challenge.language
-    }))
+    const challengesData = challenges.map(challenge => {
+      // Get list of available languages for this challenge
+      const availableLanguages = Object.keys(challenge.starterCodes).filter(
+        lang => challenge.starterCodes[lang as keyof typeof challenge.starterCodes]
+      )
+
+      return {
+        id: challenge._id.toString(),
+        title: challenge.title,
+        availableLanguages
+      }
+    })
 
     res.status(200).json(success(challengesData))
   } catch (err) {
