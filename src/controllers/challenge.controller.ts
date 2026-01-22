@@ -74,6 +74,11 @@ export const createChallenge = async (req: AuthRequest, res: Response): Promise<
       testCases: testCases || []
     })
 
+    // Add challenge to lesson
+    await Lesson.findByIdAndUpdate(lessonId, {
+      $push: { challengeIds: challenge._id }
+    })
+
     res.status(201).json(success({ challengeId: challenge._id.toString() }))
   } catch (err) {
     console.error('Create challenge error:', err)
