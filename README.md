@@ -6,6 +6,11 @@ The Backend of Lambda L.A.P Project
 - **Express** - Web framework
 - **Mongoose** - MongoDB ODM
 - **Jest** & **Supertest** - Testing framework
+- **Rate Limiting:**
+  - Standard API: 100 requests / 15 min
+  - Auth endpoints: 5 requests / 15 min
+  - Execution endpoints: 20 requests / 15 min
+  - *Note: Rate limiting is currently disabled for development.*
 - **ESLint** (Standard) & **Prettier** - Code quality
 - **Husky** - Git hooks for pre-commit linting
 
@@ -530,7 +535,6 @@ Create a new challenge with multi-language support.
     "python": "def two_sum(nums, target):\n    # solution"
   },
   "testCases": [
-  "testCases": [
     {
       "input": "[2, 7, 11, 15], 9",
       "expectedOutput": "[0, 1]",
@@ -544,6 +548,8 @@ Create a new challenge with multi-language support.
   ]
 }
 ```
+
+> **Note:** The created challenge is automatically added to the specified Lesson's `challengeIds` array.
 
 **Response (201):**
 ```json
