@@ -7,10 +7,21 @@ export enum Status {
   FAILED = 'FAILED'
 }
 
+export enum SubmissionLanguage {
+  PYTHON = 'python',
+  CPP = 'cpp',
+  JAVA = 'java',
+  JAVASCRIPT = 'javascript',
+  TYPESCRIPT = 'typescript',
+  GO = 'go',
+  RUST = 'rust'
+}
+
 export interface ISubmission extends Document {
   userId: mongoose.Types.ObjectId
   challengeId: mongoose.Types.ObjectId
   userCode: string
+  language: SubmissionLanguage
   outputLog: string
   status: Status
   metrics: Record<string, any>
@@ -31,6 +42,11 @@ const SubmissionSchema = new Schema<ISubmission>(
     },
     userCode: {
       type: String,
+      required: true
+    },
+    language: {
+      type: String,
+      enum: Object.values(SubmissionLanguage),
       required: true
     },
     outputLog: {

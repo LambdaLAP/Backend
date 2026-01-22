@@ -11,6 +11,7 @@ export interface ILesson extends Document {
   orderIndex: number
   contentMarkdown: string
   type: LessonType
+  challengeIds: mongoose.Types.ObjectId[]
 }
 
 const LessonSchema = new Schema<ILesson>({
@@ -36,6 +37,11 @@ const LessonSchema = new Schema<ILesson>({
     type: String,
     enum: Object.values(LessonType),
     default: LessonType.LESSON
+  },
+  challengeIds: {
+    type: [Schema.Types.ObjectId],
+    ref: 'Challenge',
+    default: []
   }
 })
 
