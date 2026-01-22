@@ -395,7 +395,7 @@ Delete a course.
 ### Lessons
 
 #### `GET /lessons/:lessonId`
-Get lesson details with challenge and navigation.
+Get lesson details with challenges and navigation.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -407,11 +407,24 @@ Get lesson details with challenge and navigation.
     "id": "lesson_id",
     "title": "Data Types",
     "contentMarkdown": "# Introduction...",
-    "challenge": {
-      "id": "challenge_id",
-      "starterCode": "# Your code here",
-      "language": "python"
-    },
+    "challenges": [
+      {
+        "id": "challenge_id",
+        "title": "Challenge Title",
+        "starterCodes": {
+          "python": "# Your code here",
+          "javascript": "// Your code here",
+          "cpp": "// Your code here"
+        },
+        "testCases": [
+          {
+            "input": [1, 2, 3],
+            "expectedOutput": 6,
+            "isHidden": false
+          }
+        ]
+      }
+    ],
     "nextLessonId": "next_lesson_id",
     "prevLessonId": "prev_lesson_id"
   }
@@ -467,7 +480,9 @@ Create a new lesson.
 ### Challenges
 
 #### `GET /challenges/:challengeId`
-Get challenge details.
+Get challenge details. Hidden test cases are filtered for students.
+
+**Headers:** `Authorization: Bearer <token>` (optional, affects test case visibility)
 
 **Response (200):**
 ```json
@@ -476,16 +491,28 @@ Get challenge details.
   "data": {
     "id": "challenge_id",
     "lessonId": "lesson_id",
-    "title": "Challenge Title",
-    "starterCode": "# Your code here",
-    "language": "python",
-    "testCases": []
+    "title": "Two Sum Problem",
+    "starterCodes": {
+      "python": "def two_sum(nums, target):\n    pass",
+      "javascript": "function twoSum(nums, target) {\n    // your code\n}",
+      "cpp": "vector<int> twoSum(vector<int>& nums, int target) {\n    // your code\n}",
+      "java": "public int[] twoSum(int[] nums, int target) {\n    // your code\n}"
+    },
+    "testCases": [
+      {
+        "input": [[2, 7, 11, 15], 9],
+        "expectedOutput": [0, 1],
+        "isHidden": false
+      }
+    ]
   }
 }
 ```
 
+**Note:** Students only see test cases where `isHidden: false`. Admins/instructors see all test cases.
+
 #### `POST /challenges` (Admin/Instructor only)
-Create a new challenge.
+Create a new challenge with multi-language support.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -493,11 +520,27 @@ Create a new challenge.
 ```json
 {
   "lessonId": "lesson_id",
-  "title": "Challenge Title",
-  "starterCode": "# Starter code",
-  "solutionCode": "# Solution",
-  "testCases": [],
-  "language": "python"
+  "title": "Two Sum Problem",
+  "starterCodes": {
+    "python": "def two_sum(nums, target):\n    pass",
+    "javascript": "function twoSum(nums, target) {\n    // your code\n}",
+    "cpp": "vector<int> twoSum(vector<int>& nums, int target) {\n    // your code\n}"
+  },
+  "solutionCodes": {
+    "python": "def two_sum(nums, target):\n    # solution"
+  },
+  "testCases": [
+    {
+      "input": [[2, 7, 11, 15], 9],
+      "expectedOutput": [0, 1],
+      "isHidden": false
+    },
+    {
+      "input": [[3, 2, 4], 6],
+      "expectedOutput": [1, 2],
+      "isHidden": true
+    }
+  ]
 }
 ```
 
@@ -511,18 +554,22 @@ Create a new challenge.
 }
 ```
 
+**Supported Languages:** `python`, `cpp`, `java`, `javascript`, `typescript`, `go`, `rust`
+
 ---
 
-### Code Execution
+### Code Execution & Submissions
 
 #### `POST /execution/run`
-Execute code (dummy implementation).
+Quickly test code without saving (dummy implementation).
+
+**Headers:** `Authorization: Bearer <token>` (optional)
 
 **Request:**
 ```json
 {
   "challengeId": "challenge_id",
-  "code": "print('Hello World')",
+  "code": "def two_sum(nums, target):\n    return [0, 1]",
   "language": "python"
 }
 ```
@@ -533,7 +580,7 @@ Execute code (dummy implementation).
   "success": true,
   "data": {
     "status": "PASS",
-    "stdout": "Code executed successfully\n",
+    "stdout": "Code executed successfully\nAll test cases passed!\n",
     "stderr": null,
     "metrics": {
       "runtime": "0.02s"
@@ -542,8 +589,52 @@ Execute code (dummy implementation).
 }
 ```
 
+**Supported Languages:** `python`, `cpp`, `java`, `javascript`, `typescript`, `go`, `rust`
+
+**Note:** Use this endpoint for quick testing. For official challenge submissions, use `/execution/submit`.
+
+#### `POST /execution/submit`
+Submit code for a challenge. Validates, executes, saves submission, and returns results.
+
+**Headers:** `Authorization: Bearer <token>` (required)
+
+**Request:**
+```json
+{
+  "challengeId": "challenge_id",
+  "code": "def two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        if target - num in seen:\n            return [seen[target - num], i]\n        seen[num] = i",
+  "language": "python"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "submissionId": "submission_id",
+    "status": "PASSED",
+    "stdout": "Code executed successfully\nAll test cases passed!\n",
+    "stderr": null,
+    "metrics": {
+      "runtime": "0.03s",
+      "memoryUsed": "512KB"
+    }
+  }
+}
+```
+
+**Supported Languages:** `python`, `cpp`, `java`, `javascript`, `typescript`, `go`, `rust`
+
+**Features:**
+- Requires authentication
+- Validates that the challenge supports the selected language
+- Executes the code against test cases
+- Saves the submission to the database
+- Returns the submission ID for tracking
+
 #### `GET /execution/submissions`
-Get submission history.
+Get submission history with language information.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -558,10 +649,12 @@ Get submission history.
     {
       "id": "submission_id",
       "challengeId": "challenge_id",
+      "language": "python",
       "status": "PASSED",
       "createdAt": "2025-12-10T...",
       "metrics": {
-        "runtime": "0.02s"
+        "runtime": "0.02s",
+        "memoryUsed": "512KB"
       }
     }
   ]
