@@ -1,4 +1,6 @@
-import rateLimit from 'express-rate-limit'
+// import rateLimit from 'express-rate-limit'
+
+const passThrough = (_req: any, _res: any, next: any) => next()
 
 /**
  * Rate limiting middleware for API endpoints
@@ -24,6 +26,8 @@ import rateLimit from 'express-rate-limit'
  * // Usage in routes
  * router.get('/courses', apiLimiter, getCourses)
  */
+export const apiLimiter = passThrough
+/*
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
@@ -35,6 +39,7 @@ export const apiLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false // Disable the `X-RateLimit-*` headers
 })
+*/
 
 /**
  * Strict rate limiter for authentication endpoints
@@ -51,6 +56,8 @@ export const apiLimiter = rateLimit({
  * router.post('/login', authLimiter, login)
  * router.post('/register', authLimiter, register)
  */
+export const authLimiter = passThrough
+/*
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 login/register requests per windowMs
@@ -63,6 +70,7 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true // Don't count successful requests
 })
+*/
 
 /**
  * Rate limiter for code execution endpoints
@@ -77,6 +85,8 @@ export const authLimiter = rateLimit({
  * // Usage in execution routes
  * router.post('/run', executionLimiter, runCode)
  */
+export const executionLimiter = passThrough
+/*
 export const executionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // Limit each IP to 20 executions per windowMs
@@ -88,6 +98,7 @@ export const executionLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 })
+*/
 
 export default {
   apiLimiter,

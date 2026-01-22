@@ -49,7 +49,7 @@ const ChallengeSchema = new Schema<IChallenge>({
     validate: {
       validator: function (v: IStarterCodes) {
         // At least one language must be provided
-        return Object.values(v).some(code => code && code.trim().length > 0)
+        return Object.values(v).some(code => typeof code === 'string' && code.trim().length > 0)
       },
       message: 'At least one starter code language must be provided'
     }
@@ -68,7 +68,7 @@ const ChallengeSchema = new Schema<IChallenge>({
     validate: {
       validator: function (v: IStarterCodes) {
         // At least one language must be provided
-        return Object.values(v).some(code => code && code.trim().length > 0)
+        return Object.values(v).some(code => typeof code === 'string' && code.trim().length > 0)
       },
       message: 'At least one solution code language must be provided'
     }
