@@ -664,6 +664,101 @@ Get submission history with language information.
 
 ---
 
+
+## Admin User Management
+
+> **Note:** All these endpoints require authentication and `ADMIN` role.
+
+### Get All Users
+
+**Endpoint:** `GET /users`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "role": "STUDENT",
+        "_id": "user_id_1",
+        "email": "student@example.com",
+        "createdAt": "2024-03-20T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 50,
+      "pages": 5
+    }
+  }
+}
+```
+
+### Get User by ID
+
+**Endpoint:** `GET /users/:id`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "role": "INSTRUCTOR",
+      "_id": "user_id",
+      "email": "instructor@example.com",
+      "profileData": { "name": "Prof. X" }
+    }
+  }
+}
+```
+
+### Create User
+
+**Endpoint:** `POST /users`
+
+**Request Body:**
+```json
+{
+  "email": "newadmin@example.com",
+  "password": "securepassword",
+  "role": "ADMIN",
+  "name": "Admin User"
+}
+```
+
+### Update User
+
+**Endpoint:** `PUT /users/:id`
+
+**Request Body:**
+```json
+{
+  "role": "INSTRUCTOR",
+  "profileData": { "name": "Updated Name" }
+}
+```
+
+### Delete User
+
+**Endpoint:** `DELETE /users/:id`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "User deleted successfully"
+  }
+}
+```
+
 ### Health Check
 - **GET** `/health`
   - Returns server health status

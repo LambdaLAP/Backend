@@ -1,7 +1,11 @@
 import { Response } from 'express'
-import { User, Enrollment, LessonProgress, Lesson } from '../models'
+import { User, Enrollment, LessonProgress, Lesson, Role } from '../models'
 import { success, error } from '../utils/jsend'
 import { AuthRequest } from '../middlewares/auth.middleware'
+
+// Admin Controller Methods
+
+import bcrypt from 'bcryptjs'
 
 /**
  * Get user dashboard data with stats and quick resume
@@ -304,5 +308,216 @@ export const updateLessonProgress = async (req: AuthRequest, res: Response): Pro
   } catch (err) {
     console.error('Update progress error:', err)
     res.status(500).json(error('Failed to update progress', 'INTERNAL_ERROR'))
+  }
+}
+
+/**
+ * Get all users (Admin only)
+ *
+ * Retrieves a list of all users. Supports pagination via query params.
+ *
+ * @param req - AuthRequest
+ * @param res - Response
+ */
+export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.limit as string) || 10
+    const skip = (page - 1) * limit
+
+    const users = await User.find()
+      .select('-passwordHash')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+
+    const total = await User.countDocuments()
+
+    res.status(200).json(
+      success({
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      })
+    )
+  } catch (err) {
+    console.error('Get all users error:', err)
+    res.status(500).json(error('Failed to get users', 'INTERNAL_ERROR'))
+  }
+}
+
+/**
+ * Get user by ID (Admin only)
+ *
+ * Retrieves a specific user by their ID.
+ *
+ * @param req - AuthRequest
+ * @param res - Response
+ */
+export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const user = await User.findById(id).select('-passwordHash')
+
+    if (!user) {
+      res.status(404).json(error('User not found', 'NOT_FOUND'))
+      return
+    }
+
+    res.status(200).json(success({ user }))
+  } catch (err) {
+    console.error('Get user by id error:', err)
+    res.status(500).json(error('Failed to get user', 'INTERNAL_ERROR'))
+  }
+}
+
+/**
+ * Create a new user (Admin only)
+ *
+ * Allows admins to create users, including other admins/instructors.
+ *
+ * @param req - AuthRequest
+ * @param res - Response
+ */
+export const createUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { email, password, role, name } = req.body
+
+    // Validation
+    if (!email || !password) {
+      res.status(400).json(error('Email and password are required', 'VALIDATION_ERROR'))
+      return
+    }
+
+    if (password.length < 6) {
+      res.status(400).json(error('Password must be at least 6 characters', 'VALIDATION_ERROR'))
+      return
+    }
+
+    // Role validation
+    if (role && !Object.values(Role).includes(role)) {
+      res.status(400).json(error('Invalid role', 'VALIDATION_ERROR'))
+      return
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() })
+    if (existingUser) {
+      res.status(409).json(error('User already exists', 'CONFLICT'))
+      return
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10)
+
+    const user = await User.create({
+      email: email.toLowerCase(),
+      passwordHash,
+      role: role || Role.STUDENT,
+      profileData: name ? { name } : null,
+      stats: { streakDays: 0, totalXp: 0, lessonsCompleted: 0 }
+    })
+
+    res.status(201).json(
+      success({
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          role: user.role,
+          profileData: user.profileData
+        }
+      })
+    )
+  } catch (err) {
+    console.error('Create user error:', err)
+    res.status(500).json(error('Failed to create user', 'INTERNAL_ERROR'))
+  }
+}
+
+/**
+ * Update an existing user (Admin only)
+ *
+ * Updates user details like role, email, profile data.
+ *
+ * @param req - AuthRequest
+ * @param res - Response
+ */
+export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { email, role, profileData } = req.body
+
+    const user = await User.findById(id)
+    if (!user) {
+      res.status(404).json(error('User not found', 'NOT_FOUND'))
+      return
+    }
+
+    if (email) user.email = email.toLowerCase()
+    if (role) {
+      if (!Object.values(Role).includes(role)) {
+        res.status(400).json(error('Invalid role', 'VALIDATION_ERROR'))
+        return
+      }
+      user.role = role
+    }
+    if (profileData) {
+      user.profileData = { ...user.profileData, ...profileData }
+    }
+
+    await user.save()
+
+    res.status(200).json(
+      success({
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          role: user.role,
+          profileData: user.profileData,
+          stats: user.stats
+        }
+      })
+    )
+  } catch (err) {
+    console.error('Update user error:', err)
+    res.status(500).json(error('Failed to update user', 'INTERNAL_ERROR'))
+  }
+}
+
+/**
+ * Delete a user (Admin only)
+ *
+ * Permanently removes a user and their data.
+ *
+ * @param req - AuthRequest
+ * @param res - Response
+ */
+export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+
+    // Prevent deleting self
+    if (req.user?.id === id) {
+      res.status(400).json(error('Cannot delete yourself', 'VALIDATION_ERROR'))
+      return
+    }
+
+    const user = await User.findByIdAndDelete(id)
+    if (!user) {
+      res.status(404).json(error('User not found', 'NOT_FOUND'))
+      return
+    }
+
+    // Cleanup related data (optional but good practice)
+    await Enrollment.deleteMany({ userId: id })
+    await LessonProgress.deleteMany({ userId: id })
+    // Submission cleanup could be added here too
+
+    res.status(200).json(success({ message: 'User deleted successfully' }))
+  } catch (err) {
+    console.error('Delete user error:', err)
+    res.status(500).json(error('Failed to delete user', 'INTERNAL_ERROR'))
   }
 }
