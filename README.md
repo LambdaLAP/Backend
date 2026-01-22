@@ -418,8 +418,8 @@ Get lesson details with challenges and navigation.
         },
         "testCases": [
           {
-            "input": [1, 2, 3],
-            "expectedOutput": 6,
+            "input": "1, 2, 3",
+            "expectedOutput": "6",
             "isHidden": false
           }
         ]
@@ -500,8 +500,8 @@ Get challenge details. Hidden test cases are filtered for students.
     },
     "testCases": [
       {
-        "input": [[2, 7, 11, 15], 9],
-        "expectedOutput": [0, 1],
+        "input": "[2, 7, 11, 15], 9",
+        "expectedOutput": "[0, 1]",
         "isHidden": false
       }
     ]
@@ -530,14 +530,15 @@ Create a new challenge with multi-language support.
     "python": "def two_sum(nums, target):\n    # solution"
   },
   "testCases": [
+  "testCases": [
     {
-      "input": [[2, 7, 11, 15], 9],
-      "expectedOutput": [0, 1],
+      "input": "[2, 7, 11, 15], 9",
+      "expectedOutput": "[0, 1]",
       "isHidden": false
     },
     {
-      "input": [[3, 2, 4], 6],
-      "expectedOutput": [1, 2],
+      "input": "[3, 2, 4], 6",
+      "expectedOutput": "[1, 2]",
       "isHidden": true
     }
   ]

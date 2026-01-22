@@ -11,8 +11,8 @@ export interface IStarterCodes {
 }
 
 export interface ITestCase {
-  input: any
-  expectedOutput: any
+  input: string
+  expectedOutput: string
   isHidden: boolean
 }
 
@@ -76,8 +76,8 @@ const ChallengeSchema = new Schema<IChallenge>({
   testCases: {
     type: [
       {
-        input: { type: Schema.Types.Mixed, required: true },
-        expectedOutput: { type: Schema.Types.Mixed, required: true },
+        input: { type: String, required: true },
+        expectedOutput: { type: String, required: true },
         isHidden: { type: Boolean, required: true, default: false }
       }
     ],

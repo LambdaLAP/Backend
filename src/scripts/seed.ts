@@ -117,13 +117,24 @@ const seedDatabase = async () => {
     await Challenge.create({
       lessonId: lesson2._id,
       title: 'Calculate Area',
-      starterCode: 'def calculate_area(length, width):\n    # Your code here\n    pass',
-      solutionCode: 'def calculate_area(length, width):\n    return length * width',
+      starterCodes: {
+        python: 'def calculate_area(length, width):\n    # Your code here\n    pass'
+      },
+      solutionCodes: {
+        python: 'def calculate_area(length, width):\n    return length * width'
+      },
       testCases: [
-        { input: [5, 2], expected: 10 },
-        { input: [10, 10], expected: 100 }
-      ],
-      language: 'python'
+        {
+          input: '5, 2',
+          expectedOutput: '10',
+          isHidden: false
+        },
+        {
+          input: '10, 10',
+          expectedOutput: '100',
+          isHidden: true
+        }
+      ]
     })
 
     console.log('Created Challenges')
